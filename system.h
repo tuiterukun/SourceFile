@@ -1,0 +1,1 @@
+void SYSTEM_Initialize (void);
