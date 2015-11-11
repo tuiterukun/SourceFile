@@ -28,18 +28,24 @@ int main(void) {
     config_init();
     SYSTEM_Initialize();
     uart_init();
-   
-    while(1){
     
+    char cmd = uart_get_char();
+    float cap1 = CapacitiveSensing(SENSOR1);
+    printf("r%4.2f\n\r",cap1);
+   
+    /* 
+     * for PIC measurement without Multiplexer
+     * 
+    char cmd = uart_get_char();
     float cap1 = CapacitiveSensing(SENSOR1);
     float cap2 = CapacitiveSensing(SENSOR2);
+    printf(" PIN1        : %4.2f, PIN2: %4.2f\n\r",cap1,cap2);    //for PIC measurement
+    printf(" %4.2f\n\r",cap1);
+     *
+     *
+     */
     
-    printf("pin0: %.4f\tpin1: %.4f \n\r",cap1,cap2);
-    //putsUART1("\n\r");
-    
-    __delay_ms(10000); 
-    
-    }
+    __delay_ms(100);
     
     return 0;
 }

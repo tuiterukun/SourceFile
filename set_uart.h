@@ -23,7 +23,7 @@ extern "C" {
 #endif
 
 void uart_init(void);
-void uart_close(void);
+char uart_get_char(void);
 
 #ifdef	__cplusplus
 }

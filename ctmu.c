@@ -9,7 +9,9 @@
 #endif
 
 #define DISCHARGE_TIME 1000 //[us]
-#define CHARGE_TIME 10 //[us]
+#define CHARGE_TIME    10   //[us] default 10us
+#define I_SOURCE 10        //1=0.55, 10=5.5 100=55[uA]
+
 //#define DELAY_CONST 16 //const
 
 #define MES_COUNT 30
@@ -83,7 +85,22 @@ unsigned char InitCTMU(unsigned char ch_num){
      //CTMUCON
     CTMUCONbits.CTMUEN = 1; //make sure CTMU is disabled
     //1.set the range of current source.
-    CTMUICONbits.IRNG = 0x02; //5.5uA
+    switch (I_SOURCE)
+    {
+        case 1:
+            CTMUICONbits.IRNG = 0x01;   //0.55uA
+            break;
+        case 10:
+            CTMUICONbits.IRNG = 0x02;   //55uA
+            break;
+        case 100:
+            CTMUICONbits.IRNG = 0x03;   //55uA
+            break;
+        default:
+            CTMUICONbits.IRNG = 0x00;   //error
+            break;
+    }
+    
     //2.set the toriming paramator of current.
     CTMUICONbits.ITRIM = 0; //Nominal - No Adjustment
     //3.set the edge
@@ -103,7 +120,7 @@ unsigned char InitCTMU(unsigned char ch_num){
     delay_us(DISCHARGE_TIME);
     CTMUCONbits.IDISSEN = 0; //Do not ground the current source
     //9 clear ON bit
-    CTMUCONbits.CTMUEN = 0; //make sure CTMU is disnabled
+    CTMUCONbits.CTMUEN = 0; //make sure CTMU is disabled
     //10.
     CTMUCONbits.EDG1STAT = 0; //Stop charging circuit
     CTMUCONbits.EDG2STAT = 0; //Stop charging circuit
@@ -145,9 +162,9 @@ unsigned int runCTMU(void){
     //__delay32(40); //wait for 10us
     //__delay32(CHARGE_TIME*DELAY_CONST); //wait for 10us
     delay_us(CHARGE_TIME);
-    AD1CON1bits.SAMP = 0; //and begin A/D conv.
+    AD1CON1bits.SAMP = 0; //and begin A/D convert.
     CTMUCONbits.EDG1STAT = 0; //Stop charging circuit
-    IFS0bits.AD1IF = 0; //make sure A/D Intrpt not set
+    IFS0bits.AD1IF = 0; //make sure A/D Interrupt not set
     while(!IFS0bits.AD1IF);//Wait for A/D convert complete
     raw_value = ADC1BUF0;
     AD1CON1bits.SAMP = 0;
@@ -175,8 +192,8 @@ float CapacitiveSensing(unsigned char ch_num){
         InitCTMU(ch_num);
         totalvol += runCTMU();
     }
-    vol = totalvol / MES_COUNT;
-    cap = 5.5*10/(vol/1024*3.3);
+    vol = (float)totalvol / (float)MES_COUNT;
+    cap = (float)I_SOURCE * 0.55 * (float)CHARGE_TIME /(vol/1024*3.3);
     
     return cap;
 }
